@@ -1,48 +1,23 @@
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
-// const resolve = require('resolve');
 const PnpWebpackPlugin = require('pnp-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
-// const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const safePostCssParser = require('postcss-safe-parser');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
-// const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
-// const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
 const paths = require('./paths');
 const getClientEnvironment = require('./env');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
-// const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin-alt');
-// const typescriptFormatter = require('react-dev-utils/typescriptFormatter');
 
-
-const commitHash = require('child_process')
-  .execSync('git rev-parse --short HEAD')
-  .toString();
-
-// Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
-// Some apps do not need the benefits of saving a web request, so not inlining the chunk
-// makes for a smoother build process.
-// const shouldInlineRuntimeChunk = process.env.INLINE_RUNTIME_CHUNK !== 'false';
-
-// Check if TypeScript is setup
-// const useTypeScript = fs.existsSync(paths.appTsConfig);
-
-// style files regexes
-const cssRegex = /\.css$/;
-// const cssModuleRegex = /\.module\.css$/;
-const sassRegex = /\.(scss|sass)$/;
-// const sassModuleRegex = /\.module\.(scss|sass)$/;
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
@@ -203,24 +178,8 @@ module.exports = function (webpackEnv) {
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
     entry: {
-      // Include an alternative client for WebpackDevServer. A client's job is to
-      // connect to WebpackDevServer by a socket and get notified about changes.
-      // When you save a file, the client will either apply hot updates (in case
-      // of CSS changes), or refresh the page (in case of JS changes). When you
-      // make a syntax error, this client will display a syntax error overlay.
-      // Note: instead of the default WebpackDevServer client, we use a custom one
-      // to bring better experience for Create React App users. You can replace
-      // the line below with these two lines if you prefer the stock client:
-      //   require.resolve('webpack-dev-server/client') + '?/',
-      //   require.resolve('webpack/hot/dev-server'),
-      //   isEnvDevelopment &&
-      //     require.resolve('react-dev-utils/webpackHotDevClient'),
-      // Finally, this is your app's code:
       bundle: [paths.appIndexJs],
-      widgetFrame: [paths.widgetFrameJs],
-      // We include the app code last so that if there is a runtime error during
-      // initialization, it doesn't blow up the WebpackDevServer client, and
-      // changing JS code would still trigger a refresh.
+      widgetFrame: [paths.widgetFrameJs]
     },
     output: {
       // The build folder.
@@ -313,15 +272,6 @@ module.exports = function (webpackEnv) {
         }),
       ],
     },
-    // Automatically split vendor and commons
-    // https://twitter.com/wSokra/status/969633336732905474
-    // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
-    //   splitChunks: {
-    //     chunks: false
-    //   },
-    // Keep the runtime chunk seperated to enable long term caching
-    // https://twitter.com/wSokra/status/969679223278505985
-    //   runtimeChunk: false,
     resolve: {
       // This allows you to set a fallback for where Webpack should look for modules.
       // We placed these paths second because we want `node_modules` to "win"
@@ -331,36 +281,19 @@ module.exports = function (webpackEnv) {
         // It is guaranteed to exist because we tweak it in `env.js`
         process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
       ),
-      // These are the reasonable defaults supported by the Node ecosystem.
-      // We also include JSX as a common component filename extension to support
-      // some tools, although we do not recommend using it, see:
-      // https://github.com/facebook/create-react-app/issues/290
-      // `web` extension prefixes have been added for better support
-      // for React Native Web.
       extensions: paths.moduleFileExtensions
         .map(ext => `.${ext}`)
         .filter(ext => !ext.includes('ts')),
       alias: {
-        // Support React Native Web
-        // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         'react-native': 'react-native-web',
       },
       plugins: [
-        // Adds support for installing with Plug'n'Play, leading to faster installs and adding
-        // guards against forgotten dependencies and such.
         PnpWebpackPlugin,
-        // Prevents users from importing files from outside of src/ (or node_modules/).
-        // This often causes confusion because we only process files within src/ with babel.
-        // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
-        // please link the files into your node_modules/ and let module-resolution kick in.
-        // Make sure your source files are compiled, as they will not be processed in any way.
         new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
       ],
     },
     resolveLoader: {
       plugins: [
-        // Also related to Plug'n'Play, but this time it tells Webpack to load its loaders
-        // from the current package.
         PnpWebpackPlugin.moduleLoader(module),
       ],
     },
@@ -464,19 +397,7 @@ module.exports = function (webpackEnv) {
                 sourceMaps: false,
               },
             },
-            // "postcss" loader applies autoprefixer to our CSS.
-            // "css" loader resolves paths in CSS and adds assets as dependencies.
-            // "style" loader turns CSS into JS modules that inject <style> tags.
-            // In production, we use MiniCSSExtractPlugin to extract that CSS
-            // to a file, but in development "style" loader enables hot editing
-            // of CSS.
-            // By default we support CSS Modules with the extension .module.css
             ...styleLoaders,
-            // "file" loader makes sure those assets get served by WebpackDevServer.
-            // When you `import` an asset, you get its (virtual) filename.
-            // In production, they would get copied to the `build` folder.
-            // This loader doesn't use a "test" so it will catch all modules
-            // that fall through the other loaders.
             {
               loader: require.resolve('file-loader'),
               // Exclude `js` files to keep "css" loader working as it injects
@@ -499,7 +420,7 @@ module.exports = function (webpackEnv) {
         Object.assign(
           {},
           {
-            inject: true, // is this okay for prod?
+            inject: true, 
             chunks: ['widgetFrame'],
             filename: isEnvProduction
               ? 'widget_frame.html'
@@ -526,12 +447,11 @@ module.exports = function (webpackEnv) {
             : undefined
         )
       ),
-      // Generates an `index.html` file with the <script> injected.
       new HtmlWebpackPlugin(
         Object.assign(
           {},
           {
-            inject: false, // is this okay for prod?
+            inject: false, 
             chunks: ['bundle'],
             template: paths.appHtml,
             filename: 'index.html'
@@ -554,11 +474,6 @@ module.exports = function (webpackEnv) {
             : undefined
         )
       ),
-      // Inlines the webpack runtime script. This script is too small to warrant
-      // a network request.
-      //   isEnvProduction &&
-      //     shouldInlineRuntimeChunk &&
-      //     new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/runtime~.+[.]js/]),
       // Makes some environment variables available in index.html.
       // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
       // <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
@@ -569,15 +484,8 @@ module.exports = function (webpackEnv) {
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
       new ModuleNotFoundPlugin(paths.appPath),
-      // Makes some environment variables available to the JS code, for example:
-      // if (process.env.NODE_ENV === 'production') { ... }. See `./env.js`.
-      // It is absolutely essential that NODE_ENV is set to production
-      // during a production build.
-      // Otherwise React will be compiled in the very slow development mode.
       new webpack.DefinePlugin(env.stringified),
-      // Including the short git hash for access in the JS code
       new webpack.DefinePlugin({
-        COMMIT_HASH: JSON.stringify(commitHash),
         BASENAME: paths.basename,
       }),
       // This is necessary to emit hot updates (currently CSS only):
@@ -611,52 +519,7 @@ module.exports = function (webpackEnv) {
       // solution that requires the user to opt into importing specific locales.
       // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
       // You can remove this if you don't use Moment.js:
-      new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
-      // Generate a service worker script that will precache, and keep up to date,
-      // the HTML & assets that are part of the Webpack build.
-      //   isEnvProduction &&
-      //     new WorkboxWebpackPlugin.GenerateSW({
-      //       clientsClaim: true,
-      //       exclude: [/\.map$/, /asset-manifest\.json$/],
-      //       importWorkboxFrom: 'cdn',
-      //       navigateFallback: publicUrl + '/index.html',
-      //       navigateFallbackBlacklist: [
-      //         // Exclude URLs starting with /_, as they're likely an API call
-      //         new RegExp('^/_'),
-      //         // Exclude URLs containing a dot, as they're likely a resource in
-      //         // public/ and not a SPA route
-      //         new RegExp('/[^/]+\\.[^/]+$'),
-      //       ],
-      //     }),
-      //   TypeScript type checking
-      //   useTypeScript &&
-      //     new ForkTsCheckerWebpackPlugin({
-      //       typescript: resolve.sync('typescript', {
-      //         basedir: paths.appNodeModules,
-      //       }),
-      //       async: false,
-      //       checkSyntacticErrors: true,
-      //       tsconfig: paths.appTsConfig,
-      //       compilerOptions: {
-      //         module: 'esnext',
-      //         moduleResolution: 'node',
-      //         resolveJsonModule: true,
-      //         isolatedModules: true,
-      //         noEmit: true,
-      //         jsx: 'preserve',
-      //       },
-      //       reportFiles: [
-      //         '**',
-      //         '!**/*.json',
-      //         '!**/__tests__/**',
-      //         '!**/?(*.)(spec|test).*',
-      //         '!**/src/setupProxy.*',
-      //         '!**/src/setupTests.*',
-      //       ],
-      //       watch: paths.appSrc,
-      //       silent: true,
-      //       formatter: typescriptFormatter,
-      //     }),
+      new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
